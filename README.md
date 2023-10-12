@@ -1,3 +1,3 @@
-# boxsplines
+# BoxDis
 
-Box Spline Framework to Solve Continuous-Domain Inverse Problems
+A Box Spline Framework to Solve Continuous-Domain Inverse Problems
