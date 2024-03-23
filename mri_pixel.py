@@ -39,7 +39,7 @@ class MRIPixel():
 
     def H(self, x): 
         
-        h = self.h; self.set_h(h)
+        h = self.h; 
         N = self.N
         s = int(np.log2(h))
         if h >= 1: 
@@ -59,7 +59,7 @@ class MRIPixel():
 
     def Ht(self, y): 
 
-        h = self.h; self.set_h(h)
+        h = self.h; 
         N = self.N 
         s = int(np.log2(h))
 
