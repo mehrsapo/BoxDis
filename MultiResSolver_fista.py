@@ -6,7 +6,7 @@ class MultiResSolver_fista():
     # only fourier measurements
 
     def __init__(self, forward_model='fm', reg='htv', lmbda=0., mask=None, h_init=4, range_r=512, N_scales=6,
-                  n_iters_in=None, n_iters_out=None, verbose=True, device='cuda:3', toi=1e-4, box_const=None) -> None:
+                  n_iters_in=None, n_iters_out=None, verbose=True, device='cuda:3', toi=1e-4, box_const=None, obj_stop=False) -> None:
         
         self.forward_model = forward_model
         self.reg = reg
@@ -17,6 +17,7 @@ class MultiResSolver_fista():
         self.device = device
         self.toi = toi
         self.box_const = box_const
+        self.obj_stop = obj_stop
 
         if  self.forward_model == 'fm':
             if mask is None:
@@ -110,7 +111,7 @@ class MultiResSolver_fista():
 
             inner_prox = d_k + alpha * torch.real(self.mri.Ht(y - self.mri.H(d_k)))
             if self.reg == 'htv':
-                eps  = np.minimum(1e-3, 1 / (i+1)**3)
+                eps  = np.minimum(1e-3, 1 / (i+1)**3) # -1 for FISTA
                 c_kp1 = self.prox_htv.eval(inner_prox, 
                                                  self.size_scales[n_scale]-1, self.n_iters_in[n_scale], self.lmbda*alpha, eps=eps, bc=None)
             
@@ -120,6 +121,10 @@ class MultiResSolver_fista():
             c_k = c_kp1
             d_k = d_kp1
             t_k = t_kp1
+
+            if self.obj_stop: 
+                if loss.item() < 0.109742:
+                    break
 
         c_hat = c_k
 

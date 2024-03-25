@@ -6,7 +6,7 @@ class MultiResSolver_cp():
     # only fourier measurements
 
     def __init__(self, forward_model='fm', reg='htv', lmbda=0., mask=None, h_init=4, range_r=512, N_scales=6,
-                  n_iters_in=None, n_iters_out=None, verbose=True, device='cuda:3', toi=1e-4, tau=0.2, theta=0.5, box_const=None) -> None:
+                  n_iters_in=None, n_iters_out=None, verbose=True, device='cuda:3', toi=1e-4, tau=0.2, theta=0.5, box_const=None, obj_stop=False) -> None:
         
         self.forward_model = forward_model
         self.reg = reg
@@ -18,6 +18,7 @@ class MultiResSolver_cp():
         self.toi = toi
         self.tau = tau
         self.theta = theta
+        self.obj_stop = obj_stop
 
         if  self.forward_model == 'fm':
             if mask is None:
@@ -36,7 +37,7 @@ class MultiResSolver_cp():
             assert False
 
         if n_iters_out is None:
-            self.n_iters_out = [500*200]* self.N_scales
+            self.n_iters_out = [200*500]* self.N_scales
         else:
             self.n_iters_out = n_iters_out
 
@@ -75,7 +76,6 @@ class MultiResSolver_cp():
     def solve_sacle_fm(self, n_scale, c_k, d_k, y):
         
         n_iter_out = self.n_iters_out[n_scale]
-        alpha = self.alphas[n_scale]
         h = self.h_scales[n_scale]
 
         if h >=1 : 
@@ -91,7 +91,8 @@ class MultiResSolver_cp():
         mse_scale = list()
 
         tau = self.tau
-        sigma =  0.99 * alpha**2 / tau 
+        L2 = 64
+        sigma =  1 / (tau * L2) 
         theta = self.theta
 
         for i in range(n_iter_out): 
@@ -119,6 +120,10 @@ class MultiResSolver_cp():
             c_k = c_kp1
             d_k = d_kp1
             c_bar_k = c_bar_kp1
+
+            if self.obj_stop: 
+                if loss.item() < 0.109742:
+                    break
 
             if (self.toi > 0) and (e_k < (self.toi * l_c_k)): 
                 break
